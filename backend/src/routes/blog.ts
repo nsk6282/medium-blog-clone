@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { Prisma, PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { decode, sign, verify } from 'hono/jwt'
+import { createPostInput, updatePostInput } from '@nsravankumar/medium-common-clone';
 
 export const blogRouter = new Hono<{
 	Bindings: {
@@ -49,6 +50,13 @@ blogRouter.use('/*', async (c, next) => {
 blogRouter.post('/',async (c)=>{
     const prisma = c.get("prisma");
     const body = await c.req.json();
+    const {success} = createPostInput.safeParse(body);
+    if(!success){
+      c.status(411);
+      return c.json({
+        error:"wrong inputs"
+      })
+    }
     try{
         const post = await prisma.post.create({
             data:{
@@ -79,7 +87,13 @@ blogRouter.put('/',async (c)=>{
     }).$extends(withAccelerate());
     
     const body = await c.req.json();
-    // console.log(c.get("UserId"));
+    const {success} = updatePostInput.safeParse(body);
+    if(!success){
+      c.status(411);
+      return c.json({
+        error:"wrong inputs"
+      })
+    }
 
     try{
         const post = await prisma.post.update({
@@ -105,7 +119,7 @@ blogRouter.put('/',async (c)=>{
 
 blogRouter.get('/:id',async (c)=>{
     const prisma = c.get("prisma");
-    const id = await c.req.param('id');
+    const id = c.req.param('id');
     try{
         const posts = await prisma.post.findMany({
             where:{
@@ -114,6 +128,7 @@ blogRouter.get('/:id',async (c)=>{
             select:{
                 title:true,
                 content:true,
+                published:true,
             }
         })
         return c.json({
