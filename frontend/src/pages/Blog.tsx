@@ -11,7 +11,7 @@ export const Blog = ()=>{
     const {id} = useParams<BlogParams>();
     const {loading,blog} = useBlog({id:id || ""});
     console.log(blog);
-    if(loading){
+    if(loading || !blog){
         return <div>
             <Appbar name={"Sravan"}/>
             <FullBlogSkeleton/>
