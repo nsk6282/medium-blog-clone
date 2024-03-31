@@ -21,7 +21,7 @@ blogRouter.use('/*', async (c, next) => {
       datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  const auth = c.req.header('Authorization') || "";
+  const auth = c.req.header('authorization') || "";
   if(auth.startsWith("Bearer ")){
     const token = auth.split(" ")[1];
     const response = await verify(token,c.env.JWT_SECRET);
@@ -117,18 +117,50 @@ blogRouter.put('/',async (c)=>{
     }
 })
 
+blogRouter.get('/bulk',async (c)=>{
+    const prisma = c.get("prisma");
+    try{
+        const posts = await prisma.post.findMany({
+            select:{
+                title:true,
+                content:true,
+                id:true,
+                author:{
+                    select:{
+                        name:true
+                    }
+                }
+            }
+        });
+        return c.json({
+            posts:posts
+        })
+    }catch(e){
+        c.status(403);
+        return c.json({
+            error:"error in retriving the posts"
+        })
+    }
+})
+
+
 blogRouter.get('/:id',async (c)=>{
     const prisma = c.get("prisma");
     const id = c.req.param('id');
     try{
-        const posts = await prisma.post.findMany({
+        const posts = await prisma.post.findUnique({
             where:{
                 id
             },
             select:{
                 title:true,
                 content:true,
-                published:true,
+                id:true,
+                author:{
+                    select:{
+                        name:true
+                    }
+                }
             }
         })
         return c.json({
@@ -141,22 +173,4 @@ blogRouter.get('/:id',async (c)=>{
         })
     }
 })
-
-blogRouter.post('/bulk',async (c)=>{
-    const prisma = c.get("prisma");
-    try{
-        const posts = await prisma.post.findFirst({});
-        return c.json({
-            posts:posts
-        })
-    }catch(e){
-        c.status(403);
-        return c.json({
-            error:"error in retriving the posts"
-        })
-    }
-})
-
-
-
 

@@ -16,7 +16,7 @@ export const SigninBox=()=>{
             const jwt = response.data.jwt;
             console.log(response.data.jwt);
             localStorage.setItem("token",jwt);
-            navigate("/blogs/1");
+            navigate("/blogs");
         }catch(e){
             alert("error while logging in");
         }
